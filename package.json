@@ -1,0 +1,28 @@
+{
+  "name": "derepart",
+  "private": true,
+  "version": "0.1.0",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "scripts": {
+    "dev": "concurrently -k -n api,web -c blue,green \"npm run dev --workspace @derepart/api\" \"npm run dev --workspace @derepart/web\"",
+    "dev:api": "npm run dev --workspace @derepart/api",
+    "dev:web": "npm run dev --workspace @derepart/web",
+    "build": "npm run build --workspace @derepart/web && npm run build --workspace @derepart/api",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "npm run typecheck --workspaces --if-present",
+    "seed": "npm run seed --workspace @derepart/api",
+    "e2e": "node apps/web/e2e/smoke.mjs",
+    "start": "npm run start --workspace @derepart/api"
+  },
+  "devDependencies": {
+    "@types/node": "^26.6.4",
+    "concurrently": "^10.0.5",
+    "tsup": "^8.5.1",
+    "tsx": "^4.23.15",
+    "typescript": "^5.9.3",
+    "vitest": "^5.0.3"
+  }
+}
