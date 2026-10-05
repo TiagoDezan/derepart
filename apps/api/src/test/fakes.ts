@@ -69,8 +69,10 @@ export const FIXTURE_ADDRESSES: RawCandidate[] = [
   formattedAddress: `${c.street}, ${c.number}, ${c.postalCode} ${c.city}`,
 }));
 
-export async function testDeps(overrides: { ai?: AiProvider } = {}): Promise<AppDeps & { routing: FakeRouting; close: () => Promise<void> }> {
-  const config = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', OPTIMIZER_TIME_LIMIT_MS: '300' });
+export async function testDeps(
+  overrides: { ai?: AiProvider; env?: Record<string, string> } = {},
+): Promise<AppDeps & { routing: FakeRouting; close: () => Promise<void> }> {
+  const config = loadConfig({ NODE_ENV: 'test', LOG_LEVEL: 'silent', OPTIMIZER_TIME_LIMIT_MS: '300', ...overrides.env });
   const handle = await openDatabase({ pgliteDir: 'memory' });
   const routing = new FakeRouting();
   const maps = new CompositeMapProvider([new FakeGeocoder(FIXTURE_ADDRESSES)], routing, 300, { warn: () => {} });

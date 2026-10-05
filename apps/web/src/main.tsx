@@ -7,14 +7,19 @@ import './index.css';
 import { setUnauthenticatedHandler } from './lib/api';
 import { setSyncedHandler, startBackgroundSync } from './lib/offline';
 import { keys, queryClient, setRouteData } from './lib/queries';
+import { supabase } from './lib/supabase';
 
 registerSW({ immediate: true });
 
+const PUBLIC_PATHS = ['/entrar', '/criar-conta', '/redefinir-senha'];
+
 setUnauthenticatedHandler(() => {
   queryClient.setQueryData(keys.me, null);
-  if (!location.pathname.startsWith('/entrar') && !location.pathname.startsWith('/criar-conta')) {
-    location.assign('/entrar');
-  }
+  if (!PUBLIC_PATHS.some((p) => location.pathname.startsWith(p))) location.assign('/entrar');
+});
+// Supabase Auth: signing out (here or in another tab) clears the cached profile.
+supabase?.auth.onAuthStateChange((event) => {
+  if (event === 'SIGNED_OUT') queryClient.setQueryData(keys.me, null);
 });
 setSyncedHandler((route) => {
   setRouteData(route);

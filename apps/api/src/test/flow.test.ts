@@ -5,7 +5,7 @@ import { buildApp } from '../app';
 import { deliveries, routes } from '../db/schema';
 import type { AiProvider } from '../providers/ai/types';
 import { purgeExpiredPersonalData } from '../services/retention';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { FIXTURE_ADDRESSES, testDeps } from './fakes';
 
 type Deps = Awaited<ReturnType<typeof testDeps>>;
@@ -108,6 +108,13 @@ describe('full delivery flow (API)', () => {
     expect(route.body.deliveries).toHaveLength(5);
     expect(route.body.deliveries[0].recipientName).toBe('Cliente 2'); // decrypted
     expect(route.body.status).toBe('draft');
+  });
+
+  it('has row level security enabled on every table (closes Supabase REST access)', async () => {
+    const res = await deps.db.execute(sql`select relname, relrowsecurity from pg_class c join pg_namespace n on n.oid = c.relnamespace where n.nspname = 'public' and relkind = 'r'`);
+    const rows = ((res as unknown as { rows: { relname: string; relrowsecurity: boolean }[] }).rows ?? res) as { relname: string; relrowsecurity: boolean }[];
+    expect(rows.length).toBe(10);
+    expect(rows.filter((r) => !r.relrowsecurity).map((r) => r.relname)).toEqual([]);
   });
 
   it('stores personal fields encrypted at rest', async () => {

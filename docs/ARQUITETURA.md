@@ -11,12 +11,12 @@
 | Mapa (visual) | MapLibre GL + tiles vetoriais OpenFreeMap (grátis, sem chave) | Qualquer estilo MapLibre (MapTiler, Stadia, Protomaps) via `VITE_MAP_STYLE_URL` |
 | Backend | Node 22 + Fastify 5 + TypeScript | — |
 | Banco | PostgreSQL via Drizzle ORM. Em desenvolvimento: **PGlite** (Postgres real em WASM, sem Docker) | Qualquer Postgres (Neon, Supabase, RDS…) via `DATABASE_URL` |
-| Autenticação | E-mail + senha (scrypt), sessão opaca em cookie httpOnly | Bearer token (mesma sessão) para app nativo |
+| Autenticação | **Supabase Auth** (JWT ES256 validado pelas chaves públicas/JWKS do projeto) | Login próprio: e-mail + senha (scrypt) e sessão em cookie httpOnly (`AUTH_PROVIDER=local`) |
 | Geocoding | **CartoCiudad (IGN, oficial Espanha)** → fallback Nominatim (OSM) | Google Geocoding (`GEOCODING_PROVIDERS=google`) |
 | Matriz / rotas | **OSRM** | Valhalla (preferências de vias) e Google Routes API (trânsito) |
 | Otimização | Solver próprio no backend (exato para poucas paradas, ILS + 2-opt/Or-opt para muitas) | Ponto de extensão para OR-Tools / VRP multi-veículo |
 | OCR | Tesseract.js **no aparelho** (imagem não sai do celular) | — |
-| IA | Opcional, só quando a confiança é baixa: texto primeiro, imagem só com consentimento | `AI_PROVIDER=anthropic` ou `openai` |
+| IA | Opcional, só quando a confiança é baixa: texto primeiro, imagem só com consentimento | `AI_PROVIDER=anthropic`, `openai` ou `gemini` |
 | Navegação | Deep links (Google Maps, Waze, Apple Maps, `geo:`) | — |
 | Offline | IndexedDB + fila de eventos idempotentes + Service Worker | — |
 
@@ -179,7 +179,7 @@ Foto ─► pré-processamento (redução, tons de cinza, contraste) ─► Tess
 ```
 
 * `AddressRecognitionService` (backend) concentra o parse, a decisão de usar IA e a correção.
-* `AiProvider` é uma interface implementada por `anthropic`, `openai` e `none`.
+* `AiProvider` é uma interface implementada por `anthropic`, `openai`, `gemini` e `none`.
 * A imagem nunca é gravada no servidor: trafega em memória e é descartada.
 
 ## 6. Navegação (Android/iOS)
@@ -198,9 +198,14 @@ dá para ter GPS em segundo plano.
 
 ## 7. Segurança e privacidade
 
-* As chaves ficam apenas em `apps/api/.env`. O frontend só conhece a URL pública do estilo de mapa.
-* Senhas com `scrypt` (nativo do Node). A sessão é um token aleatório guardado como **hash** no
-  banco. Cookie `httpOnly; SameSite=Lax; Secure` em produção.
+* As chaves secretas ficam apenas em `apps/api/.env`. O frontend conhece só valores públicos: o
+  estilo do mapa e a URL e a publishable key do Supabase.
+* **Supabase Auth** (padrão quando `SUPABASE_URL` está definido): o app faz login direto no Supabase
+  e envia o access token como `Bearer`. A API valida assinatura (ES256), emissor, audiência e
+  validade com o JWKS público do projeto, sem segredo. No primeiro acesso cria o perfil e o workspace
+  com o mesmo ID do `auth.users`. Excluir a conta apaga também o usuário do Supabase Auth.
+* Login próprio (`AUTH_PROVIDER=local`): senhas com `scrypt`, sessão como token aleatório guardado
+  como **hash** e cookie `httpOnly; SameSite=Lax; Secure` em produção, com proteção CSRF.
 * Toda consulta é filtrada pelo `org_id`/`user_id` da sessão (camada de repositório). Testes
   automatizados verificam que um usuário não acessa dados de outro.
 * O nome do destinatário, o complemento e as observações são **criptografados (AES-256-GCM)**

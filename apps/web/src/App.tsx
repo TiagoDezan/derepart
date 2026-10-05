@@ -3,7 +3,7 @@ import { createBrowserRouter, Navigate, RouterProvider } from 'react-router';
 import { Spinner } from './components/ui';
 import { ApiError } from './lib/api';
 import { useMe } from './lib/queries';
-import { AuthPage } from './pages/AuthPage';
+import { AuthPage, ResetPasswordPage } from './pages/AuthPage';
 import { HomePage } from './pages/HomePage';
 
 const NewRoutePage = lazy(() => import('./pages/NewRoutePage'));
@@ -31,6 +31,7 @@ const guard = (el: ReactNode) => <RequireAuth>{el}</RequireAuth>;
 const router = createBrowserRouter([
   { path: '/entrar', element: <AuthPage mode="login" /> },
   { path: '/criar-conta', element: <AuthPage mode="register" /> },
+  { path: '/redefinir-senha', element: <ResetPasswordPage /> },
   { path: '/', element: guard(<HomePage />) },
   { path: '/rotas/nova', element: guard(<NewRoutePage />) },
   { path: '/rotas/:id', element: guard(<RoutePage />) },

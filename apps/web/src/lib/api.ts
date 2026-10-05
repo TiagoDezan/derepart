@@ -1,4 +1,5 @@
 import { messageFor, type ErrorCode } from '@derepart/shared';
+import { accessToken } from './supabase';
 
 const BASE = (import.meta.env.VITE_API_URL ?? '').replace(/\/$/, '');
 
@@ -22,12 +23,15 @@ export function setUnauthenticatedHandler(fn: () => void) {
 export async function api<T>(path: string, init: { method?: string; body?: unknown; signal?: AbortSignal } = {}): Promise<T> {
   let res: Response;
   try {
+    // Supabase Auth: the access token goes as Bearer. Local auth: httpOnly cookie.
+    const token = await accessToken();
     res = await fetch(`${BASE}/api${path}`, {
       method: init.method ?? 'GET',
       credentials: 'include',
       headers: {
         Accept: 'application/json',
         'X-Derepart-Client': 'web',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
         ...(init.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
       },
       body: init.body !== undefined ? JSON.stringify(init.body) : undefined,

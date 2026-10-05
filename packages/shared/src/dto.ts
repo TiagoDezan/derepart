@@ -260,6 +260,8 @@ export interface StatsDto {
 }
 
 export interface PublicConfigDto {
+  /** 'supabase': sign in with Supabase Auth in the app; 'local': /api/auth/* endpoints. */
+  authProvider: 'local' | 'supabase';
   mapProvider: string;
   trafficAware: boolean;
   roadPreferences: boolean;

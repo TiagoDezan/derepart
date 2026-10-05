@@ -1,12 +1,13 @@
 import type { AppConfig } from '../../config';
 import { AnthropicAiProvider } from './anthropic';
+import { GeminiAiProvider } from './gemini';
 import { NoAiProvider } from './none';
 import { OpenAiProvider } from './openai';
 import type { AiProvider } from './types';
 
 const AI_TIMEOUT_MS = 45_000;
 
-/** AI_PROVIDER=none | anthropic | openai (keys only in apps/api/.env, never in the web app). */
+/** AI_PROVIDER=none | anthropic | openai | gemini (keys only in apps/api/.env, never in the web app). */
 export function createAiProvider(config: AppConfig, log?: { warn: (m: string) => void }): AiProvider {
   switch (config.AI_PROVIDER) {
     case 'anthropic':
@@ -21,6 +22,12 @@ export function createAiProvider(config: AppConfig, log?: { warn: (m: string) =>
         return new NoAiProvider();
       }
       return new OpenAiProvider(config.OPENAI_API_KEY, config.OPENAI_MODEL, config.OPENAI_BASE_URL, AI_TIMEOUT_MS);
+    case 'gemini':
+      if (!config.GEMINI_API_KEY) {
+        log?.warn('AI_PROVIDER=gemini, mas GEMINI_API_KEY está vazio — IA desativada');
+        return new NoAiProvider();
+      }
+      return new GeminiAiProvider(config.GEMINI_API_KEY, config.GEMINI_MODEL, config.GEMINI_BASE_URL, AI_TIMEOUT_MS);
     default:
       return new NoAiProvider();
   }

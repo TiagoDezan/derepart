@@ -38,7 +38,7 @@ export type ErrorCode = (typeof ERROR_CODES)[number];
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   VALIDATION: 'Alguns campos não estão corretos. Revise e tente novamente.',
   UNAUTHENTICATED: 'Sua sessão expirou. Entre novamente.',
-  INVALID_CREDENTIALS: 'E-mail ou senha incorretos.',
+  INVALID_CREDENTIALS: 'E-mail ou senha incorretos. Se ainda não tem conta neste servidor, toque em “Criar conta”.',
   EMAIL_TAKEN: 'Já existe uma conta com este e-mail.',
   FORBIDDEN: 'Você não tem acesso a este recurso.',
   NOT_FOUND: 'Não encontramos o que você procurava. Talvez tenha sido apagado.',

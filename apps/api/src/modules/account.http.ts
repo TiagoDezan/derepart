@@ -20,8 +20,15 @@ export function accountHttp(app: FastifyInstance, deps: AppDeps, routesService: 
   const auth = new AuthService(deps);
   const { db, config } = deps;
 
-  // ---- auth ----
+  // ---- auth (local mode; with Supabase Auth the app talks to Supabase directly) ----
+  const localOnly = () => {
+    if (auth.mode !== 'local') {
+      throw new AppError('FORBIDDEN', undefined, { message: 'O login é feito pelo Supabase. Atualize o app.' });
+    }
+  };
+
   app.post('/api/auth/register', { config: authLimit }, async (req, reply) => {
+    localOnly();
     const input = registerSchema.parse(req.body);
     const s = await auth.register(input, req.headers['user-agent'] ?? null);
     setSessionCookie(reply, s.token, s.expiresAt, config.COOKIE_SECURE ?? false);
@@ -31,6 +38,7 @@ export function accountHttp(app: FastifyInstance, deps: AppDeps, routesService: 
   });
 
   app.post('/api/auth/login', { config: authLimit }, async (req, reply) => {
+    localOnly();
     const input = loginSchema.parse(req.body);
     const s = await auth.login(input, req.headers['user-agent'] ?? null);
     setSessionCookie(reply, s.token, s.expiresAt, config.COOKIE_SECURE ?? false);

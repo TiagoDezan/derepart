@@ -1,7 +1,7 @@
 import path from 'node:path';
 import { buildApp } from './app';
 import { loadConfig } from './config';
-import { openDatabase } from './db/client';
+import { dbOptions, openDatabase } from './db/client';
 import { FieldCipher, resolveDevKey } from './lib/crypto';
 import { createAiProvider } from './providers/ai';
 import { createMapProvider } from './providers/maps';
@@ -11,7 +11,7 @@ import { AuthService } from './auth/auth';
 async function main() {
   const config = loadConfig();
   const dataDir = path.dirname(path.resolve(config.PGLITE_DIR));
-  const handle = await openDatabase({ databaseUrl: config.DATABASE_URL, pgliteDir: config.PGLITE_DIR });
+  const handle = await openDatabase(dbOptions(config));
   const cipher = new FieldCipher(config.DATA_ENCRYPTION_KEY ?? resolveDevKey(dataDir));
 
   const logger = { level: config.LOG_LEVEL, redact: ['req.headers.authorization', 'req.headers.cookie'] };

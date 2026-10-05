@@ -7,6 +7,7 @@ import Fastify, { type FastifyInstance } from 'fastify';
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 import { AuthService, registerAuth } from './auth/auth';
+import { createSupabaseVerifier } from './auth/supabase';
 import type { AppDeps } from './context';
 import { AppError, errorHandler } from './lib/errors';
 import { accountHttp } from './modules/account.http';
@@ -47,7 +48,9 @@ export async function buildApp(deps: AppDeps, opts: { logger?: boolean | object 
   });
   await app.register(cookie);
   // before rate limiting, so authenticated callers are limited per user instead of per IP
-  registerAuth(app, new AuthService(deps));
+  const verifier =
+    deps.tokenVerifier ?? (deps.config.AUTH_PROVIDER === 'supabase' && deps.config.SUPABASE_URL ? createSupabaseVerifier(deps.config.SUPABASE_URL) : null);
+  registerAuth(app, new AuthService(deps), verifier);
   if (deps.config.CORS_ORIGINS.length) {
     await app.register(cors, { origin: deps.config.CORS_ORIGINS, credentials: true });
   }

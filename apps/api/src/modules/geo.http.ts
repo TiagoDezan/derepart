@@ -8,6 +8,7 @@ export function geoHttp(app: FastifyInstance, deps: AppDeps) {
   const geoLimit = { rateLimit: { max: 60, timeWindow: '1 minute' } };
 
   app.get('/api/config', async (): Promise<PublicConfigDto> => ({
+    authProvider: deps.config.AUTH_PROVIDER,
     mapProvider: deps.maps.routingName,
     trafficAware: deps.maps.capabilities.traffic,
     roadPreferences: deps.maps.capabilities.roadPreferences,

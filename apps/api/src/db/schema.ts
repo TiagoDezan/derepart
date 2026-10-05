@@ -36,7 +36,8 @@ export const users = pgTable(
     id: uuid('id').primaryKey().defaultRandom(),
     name: text('name').notNull(),
     email: text('email').notNull(),
-    passwordHash: text('password_hash').notNull(),
+    /** null for accounts managed by Supabase Auth (AUTH_PROVIDER=supabase). */
+    passwordHash: text('password_hash'),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },

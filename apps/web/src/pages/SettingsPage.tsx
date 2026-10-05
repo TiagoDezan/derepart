@@ -16,6 +16,7 @@ import { useNavigate } from 'react-router';
 import { Banner, Button, Card, Field, Input, Page, Select, Spinner, Toggle } from '../components/ui';
 import { api, errorMessage } from '../lib/api';
 import { clearOfflineData } from '../lib/offline';
+import { supabase } from '../lib/supabase';
 import { keys, queryClient, useConfig, useMe, usePlaces, useVehicles } from '../lib/queries';
 
 const num = (v: string) => (v.trim() === '' ? null : Number(v.replace(',', '.')));
@@ -212,6 +213,8 @@ function PrivacySection({ settings }: { settings: SettingsDto }) {
   async function deleteAccount() {
     if (!confirm('Excluir sua conta e todos os dados? Esta ação não pode ser desfeita.')) return;
     await api('/me', { method: 'DELETE' });
+    // the Supabase user no longer exists on the server: only drop the local session
+    await supabase?.auth.signOut({ scope: 'local' });
     await clearOfflineData();
     queryClient.clear();
     navigate('/entrar', { replace: true });
@@ -276,7 +279,8 @@ function AccountSection({ name, email }: { name: string; email: string }) {
   const navigate = useNavigate();
   async function logout() {
     try {
-      await api('/auth/logout', { method: 'POST' });
+      if (supabase) await supabase.auth.signOut();
+      else await api('/auth/logout', { method: 'POST' });
     } finally {
       await clearOfflineData();
       queryClient.clear();
